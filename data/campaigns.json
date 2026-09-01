@@ -44,16 +44,18 @@
   ],
   "mode": "now",
   "is_test": false,
-  "status": "sending",
+  "status": "sent",
   "scheduled_at": null,
   "created_at": "2026-09-01T15:06:55.140Z",
   "total_recipients": 1,
-  "sent_count": 0,
+  "sent_count": 1,
   "failed_count": 0,
   "stats": null,
   "last_error": null,
   "started_at": "2026-09-01T15:07:08Z",
-  "esputnik_message_id": 4665557
+  "esputnik_message_id": 4665557,
+  "finished_at": "2026-09-01T15:07:15Z",
+  "esputnik_broadcast_id": "4517134"
  },
  {
   "id": "c_mtisvcgwb7re",
