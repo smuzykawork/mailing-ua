@@ -1,0 +1,45 @@
+# Воркер розсилок: запускається адмінкою (кнопки «Відправити», «Оновити з eSputnik», «Оновити статистику»)
+# і сам за розкладом кожні 10 хвилин — для запланованих розсилок і свіжої статистики.
+# Секрети (Settings → Secrets and variables → Actions): ESPUTNIK_LOGIN_EMAIL, ESPUTNIK_API_KEY
+name: mailer
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "process | sync_groups | stats | all"
+        default: "all"
+        required: false
+        type: string
+      campaign_id:
+        description: "id розсилки (необовʼязково)"
+        default: ""
+        required: false
+        type: string
+  schedule:
+    - cron: "*/10 * * * *"
+permissions:
+  contents: write
+concurrency:
+  group: mailer
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx
+      - name: mailer worker
+        run: python mailer_worker.py
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TASK: ${{ github.event.inputs.task || 'all' }}
+          CAMPAIGN_ID: ${{ github.event.inputs.campaign_id }}
+          ESPUTNIK_LOGIN_EMAIL: ${{ secrets.ESPUTNIK_LOGIN_EMAIL }}
+          ESPUTNIK_API_KEY: ${{ secrets.ESPUTNIK_API_KEY }}
+          ESPUTNIK_FROM: ${{ vars.ESPUTNIK_FROM || 'ACLIMA MARKETING <info@aclima.ua>' }}
+          ESPUTNIK_TEST_GROUP_ID: ${{ vars.ESPUTNIK_TEST_GROUP_ID || '202562060' }}
+          MAILER_N8N_NOTIFY_URL: ${{ secrets.MAILER_N8N_NOTIFY_URL }}
