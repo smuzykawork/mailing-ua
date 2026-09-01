@@ -44,14 +44,15 @@
   ],
   "mode": "now",
   "is_test": false,
-  "status": "queued",
+  "status": "sending",
   "scheduled_at": null,
   "created_at": "2026-09-01T15:06:55.140Z",
   "total_recipients": 1,
   "sent_count": 0,
   "failed_count": 0,
   "stats": null,
-  "last_error": null
+  "last_error": null,
+  "started_at": "2026-09-01T15:07:08Z"
  },
  {
   "id": "c_mtisvcgwb7re",
