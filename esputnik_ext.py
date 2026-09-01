@@ -7,7 +7,11 @@
   Rule 4/5 голий IP і data-URI перевіряються у validators.py
 Auth: BasicAuth(login_email, api_key) — через існуючий _auth() із app/services/esputnik.py.
 """
+import asyncio
 import logging
+import os
+import re
+import time
 from typing import Any
 
 import httpx
@@ -30,11 +34,44 @@ def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(base_url=BASE, auth=httpx.BasicAuth(*_auth()), timeout=60.0)
 
 
+# eSputnik лімітує частоту запитів (на живому акаунті /contacts дав 429 на другому запиті поспіль).
+# Тому всі виклики йдуть не частіше ніж MIN_GAP с, а на 429 — чекаємо і повторюємо.
+MIN_GAP = float(os.getenv("ESPUTNIK_MIN_GAP", "1.2"))
+_pace_lock = asyncio.Lock()
+_last_call = 0.0
+
+
+async def _paced():
+    global _last_call
+    async with _pace_lock:
+        wait = MIN_GAP - (time.monotonic() - _last_call)
+        if wait > 0:
+            await asyncio.sleep(wait)
+        _last_call = time.monotonic()
+
+
+async def _request(c: httpx.AsyncClient, method: str, path: str, *, attempts: int = 6, **kw) -> httpx.Response:
+    """Запит із дотриманням паузи та повтором на 429/5xx (Retry-After або 3·2ⁿ секунд)."""
+    delay = 3.0
+    for i in range(attempts):
+        await _paced()
+        r = await c.request(method, path, **kw)
+        if r.status_code == 429 or 500 <= r.status_code < 600:
+            ra = r.headers.get("Retry-After")
+            pause = float(ra) if ra and ra.replace(".", "", 1).isdigit() else delay
+            log.warning("%s %s -> %s, retry in %.0fs (%s/%s)", method, path, r.status_code, pause, i + 1, attempts)
+            await asyncio.sleep(pause)
+            delay = min(delay * 2, 60)
+            continue
+        return r
+    return r
+
+
 # ---------- групи ----------
 
 async def list_groups() -> list[dict]:
     async with _client() as c:
-        r = await c.get("/groups", params={"startindex": 1, "maxrows": 500})
+        r = await _request(c, "GET", "/groups", params={"startindex": 1, "maxrows": 500})
         r.raise_for_status()
         data = r.json()
     items = data if isinstance(data, list) else (data.get("groups") or data.get("items") or [])
@@ -69,39 +106,58 @@ def _extract_emails(data: Any) -> list[str]:
     return out
 
 
-async def group_emails(group_id: int) -> list[str]:
-    """Усі email-адреси групи. Основний шлях — перевірений у проєкті GET /contact/email?groupIds=.
-    Якщо відповідь не 200 — fallback на посторінковий GET /contacts?groupId=."""
+async def group_contacts_page(c: httpx.AsyncClient, group_id: int, start: int, maxrows: int = 500) -> list:
+    """Документований метод «Get contacts from a segment»: GET /group/{id}/contacts (перевірено 09.2026)."""
+    r = await _request(c, "GET", f"/group/{group_id}/contacts", params={"startindex": start, "maxrows": maxrows})
+    r.raise_for_status()
+    page = r.json()
+    return page.get("contacts", page) if isinstance(page, dict) else page
+
+
+async def group_contacts_count(group_id: int, max_pages: int = 20) -> int:
+    """Скільки контактів у групі (API кількість не віддає — гортаємо сторінками по 500, не більше max_pages)."""
+    total = 0
     async with _client() as c:
-        r = await c.get("/contact/email", params={"groupIds": group_id})
-        if r.status_code == 200:
-            return _extract_emails(r.json())
-        log.warning("GET /contact/email?groupIds=%s -> %s, fallback to /contacts", group_id, r.status_code)
-        emails, start = [], 1
+        for i in range(max_pages):
+            contacts = await group_contacts_page(c, group_id, 1 + i * 500)
+            total += len(contacts)
+            if len(contacts) < 500:
+                return total
+    return total  # 10 000+ — далі не рахуємо
+
+
+async def group_emails(group_id: int) -> list[str]:
+    """Email-адреси групи (потрібно ЛИШЕ для тестів/діагностики: розсилка йде через broadcast без вивантаження адрес)."""
+    emails: list[str] = []
+    async with _client() as c:
+        start = 1
         while True:
-            r = await c.get("/contacts", params={"groupId": group_id, "startindex": start, "maxrows": 500})
-            r.raise_for_status()
-            page = r.json()
-            contacts = page.get("contacts", page) if isinstance(page, dict) else page
-            if not contacts:
-                break
+            contacts = await group_contacts_page(c, group_id, start)
             emails.extend(_extract_emails(contacts))
             if len(contacts) < 500:
-                break
+                return emails
             start += 500
-        return emails
 
 
 # ---------- повідомлення (шаблон з HTML) ----------
 
+def _from_header(from_: str) -> str:
+    """eSputnik зберігає відправника як '"Імʼя" <email>' — беремо імʼя в лапки, якщо їх немає."""
+    m = re.match(r'^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$', from_ or "")
+    if m and m.group(1).strip():
+        return f'"{m.group(1).strip()}" <{m.group(2).strip()}>'
+    return from_
+
+
 def _message_body(*, name: str, subject: str, html: str, plain_text: str, from_: str) -> dict:
-    # Поля методу "Add/Update email message" eSputnik. Якщо API відповість 400 — текст відповіді потрапить у last_error кампанії.
-    return {"name": name[:100], "from": from_, "subject": subject, "htmlText": html, "plainText": plain_text or ""}
+    # Поля методу "Add/Update email message" — ті самі, що повертає GET /messages/email/{id} на живому акаунті:
+    # name, from, subject, htmlText, plainText. Якщо API відповість 400 — текст відповіді потрапить у last_error.
+    return {"name": name[:100], "from": _from_header(from_), "subject": subject, "htmlText": html, "plainText": plain_text or ""}
 
 
 async def create_message(**kw) -> int:
     async with _client() as c:
-        r = await c.post("/messages/email", json=_message_body(**kw))
+        r = await _request(c, "POST", "/messages/email", json=_message_body(**kw))
         if r.status_code >= 400:
             raise RuntimeError(f"eSputnik create message {r.status_code}: {r.text[:300]}")
         data = r.json() if r.text.strip() else {}
@@ -113,29 +169,94 @@ async def create_message(**kw) -> int:
 
 async def update_message(message_id: int, **kw) -> None:
     async with _client() as c:
-        r = await c.put(f"/messages/email/{message_id}", json=_message_body(**kw))
+        r = await _request(c, "PUT", f"/messages/email/{message_id}", json=_message_body(**kw))
         if r.status_code >= 400:
             raise RuntimeError(f"eSputnik update message {r.status_code}: {r.text[:300]}")
 
 
 async def message_exists(message_id: int) -> bool:
-    """Пункт 1 pre-send чекліста: GET /message/{id} має повернути 200."""
+    """Pre-send перевірка: GET /messages/email/{id} має повернути 200 (шлях /message/{id} на живому акаунті дає 404)."""
     async with _client() as c:
-        r = await c.get(f"/message/{message_id}")
+        r = await _request(c, "GET", f"/messages/email/{message_id}")
         return r.status_code == 200
 
 
 # ---------- відправка і статус ----------
 
 async def smartsend(message_id: int, recipients: list[str]) -> dict:
-    """Rule 1: тіло МІНІМАЛЬНЕ. Жодних fromName/from/html/subject/replyTo."""
+    """Send prepared message — для ТЕСТОВИХ листів (акаунт має ліміт ~100 одиночних листів/годину).
+    Rule 1: тіло мінімальне — recipients + email:true. Формат recipients за OpenAPI: [{"locator": email}]."""
     if len(recipients) > 1000:
         raise ValueError("smartsend приймає до 1000 адрес за запит")
     async with _client() as c:
-        r = await c.post(f"/message/{message_id}/smartsend", json={"recipients": recipients, "email": True})
+        body = {"recipients": [{"locator": e} for e in recipients], "email": True}
+        r = await _request(c, "POST", f"/message/{message_id}/smartsend", json=body)
         if r.status_code >= 400:
             raise RuntimeError(f"eSputnik smartsend {r.status_code}: {r.text[:300]}")
         return r.json() if r.text.strip() else {}
+
+
+# ---------- broadcast: масова розсилка на групи (без ліміту одиночних листів, адреси не вивантажуються) ----------
+
+async def create_broadcast(*, title: str, message_id: int, group_ids: list[int], excluded_group_ids: list[int] | None = None) -> str:
+    """POST /broadcast — eSputnik сам дедуплікує адреси між групами і не шле відписаним. Повертає broadcastId."""
+    body: dict = {"title": title[:200], "messageId": str(message_id), "groups": [int(g) for g in group_ids]}
+    if excluded_group_ids:
+        body["excludedGroups"] = [int(g) for g in excluded_group_ids]
+    async with _client() as c:
+        r = await _request(c, "POST", "/broadcast", json=body)
+        if r.status_code >= 400:
+            raise RuntimeError(f"eSputnik broadcast {r.status_code}: {r.text[:300]}")
+        data = r.json() if r.text.strip() else {}
+    bid = data.get("broadcastId") if isinstance(data, dict) else None
+    if not bid:
+        raise RuntimeError(f"eSputnik не повернув broadcastId: {str(data)[:200]}")
+    return str(bid)
+
+
+async def cancel_broadcast(broadcast_id: str) -> bool:
+    async with _client() as c:
+        r = await _request(c, "DELETE", f"/broadcast/{broadcast_id}")
+        return r.status_code < 400
+
+
+async def activity_stats(*, message_id: int | None, broadcast_id: str | None, date_from: str, date_to: str) -> dict | None:
+    """Статистика через GET /v2/contacts/activity (вмикається підтримкою eSputnik на запит). None — недоступно."""
+    counts = {"delivered": 0, "opened": 0, "clicked": 0, "failed": 0, "unsubscribed": 0}
+    offset = None
+    async with _client() as c:
+        for _ in range(40):
+            params = {"dateFrom": date_from, "dateTo": date_to, "maxrows": 25000}
+            if offset is not None:
+                params["offset"] = offset
+            r = await _request(c, "GET", "https://esputnik.com/api/v2/contacts/activity", params=params)
+            if r.status_code in (400, 403, 404):  # 400 "Contact support to enable ContactActivity." — ще не ввімкнено
+                return None
+            r.raise_for_status()
+            rows = r.json() or []
+            for a in rows:
+                same = (broadcast_id and str(a.get("broadcastId") or "") == str(broadcast_id)) or \
+                       (message_id and str(a.get("messageId") or "") == str(message_id))
+                if not same:
+                    continue
+                st = str(a.get("activityStatus") or "").upper()
+                if st == "DELIVERED":
+                    counts["delivered"] += 1
+                elif st == "READ":
+                    counts["opened"] += 1
+                elif st == "CLICKED":
+                    counts["clicked"] += 1
+                elif st == "UNDELIVERED":
+                    counts["failed"] += 1
+                elif st == "UNSUBSCRIBED":
+                    counts["unsubscribed"] += 1
+            if len(rows) < 25000:
+                break
+            offset = rows[-1].get("offset")
+            if offset is None:
+                break
+    counts["delivered"] += counts["opened"] + counts["clicked"]  # READ/CLICKED означають доставлено
+    return counts
 
 
 def extract_request_ids(resp: dict | list | None) -> list[str]:
@@ -155,7 +276,7 @@ async def fetch_status(request_ids: list[str]) -> list[dict]:
     async with _client() as c:
         for i in range(0, len(request_ids), 100):
             chunk = request_ids[i:i + 100]
-            r = await c.get("/message/email/status", params={"ids": ",".join(chunk)})
+            r = await _request(c, "GET", "/message/email/status", params={"ids": ",".join(chunk)})
             if r.status_code >= 400:
                 log.warning("status %s: %s", r.status_code, r.text[:200])
                 continue

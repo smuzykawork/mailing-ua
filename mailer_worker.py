@@ -123,18 +123,15 @@ async def sync_groups() -> int:
         raise RuntimeError("eSputnik не повернув груп — перевірте секрети ESPUTNIK_*")
     existing, _ = repo.read(GROUPS)
     old = {g["id"]: g for g in (existing or [])}
-    sem = asyncio.Semaphore(6)
-
-    async def count(g):
-        if g.get("contacts_count") is not None:
-            return
-        async with sem:
+    # API не віддає кількість контактів — рахуємо адреси по кожній групі. Виклики eSputnik самі тримають паузу
+    # (ліміт частоти), тому для 54 груп це ~1–2 хвилини.
+    for g in remote:
+        if g.get("contacts_count") is None:
             try:
-                g["contacts_count"] = len(await esp.group_emails(g["id"]))
-            except Exception:  # noqa: BLE001
+                g["contacts_count"] = await esp.group_contacts_count(g["id"])
+            except Exception as e:  # noqa: BLE001
+                log.warning("count group %s failed: %s", g["id"], str(e)[:120])
                 g["contacts_count"] = old.get(g["id"], {}).get("contacts_count")
-
-    await asyncio.gather(*(count(g) for g in remote))
     now = iso(utcnow())
     test_id = int(os.getenv("ESPUTNIK_TEST_GROUP_ID", "202562060"))
     out = [{"id": g["id"], "name": g["name"], "contacts_count": g.get("contacts_count"),
@@ -159,13 +156,18 @@ def due_campaigns(index: list) -> list:
 
 
 async def process_one(entry: dict) -> None:
+    """Відправка однієї розсилки.
+
+    Групи → eSputnik broadcast (POST /broadcast): eSputnik сам дедуплікує адреси між групами, не шле відписаним,
+    а ліміт «100 одиночних листів/годину» на broadcast не діє. Адреси отримувачів ніколи не вивантажуються.
+    Тестові листи (test_emails) → smartsend на 1–10 адрес.
+    """
     cid = entry["id"]
     log.info("campaign %s «%s»: start", cid, entry.get("name"))
     upsert_index(cid, {"status": "sending", "started_at": iso(utcnow()), "last_error": None})
     full, _ = repo.read(f"data/campaigns/{cid}.json")
-    results, results_sha = repo.read(f"data/results/{cid}.json")
-    results = results or {"batches": [], "request_ids": []}
-    sent = failed = 0
+    results, _ = repo.read(f"data/results/{cid}.json")
+    results = results or {"request_ids": [], "batches": []}
     try:
         if not full:
             raise RuntimeError("Немає файлу data/campaigns/<id>.json")
@@ -184,55 +186,40 @@ async def process_one(entry: dict) -> None:
                 raise RuntimeError(f"eSputnik: повідомлення {mid} не знайдено після створення")
         upsert_index(cid, {"esputnik_message_id": mid})
 
-        if full.get("test_emails"):
-            recipients = [e.strip().lower() for e in full["test_emails"] if e.strip()]
-        else:
-            seen: set[str] = set()
-            recipients = []
-            suppression, _ = repo.read("data/suppression.json")
-            blocked = {e.lower() for e in (suppression or [])}
-            for gid in full.get("group_ids") or []:
-                for e in await esp.group_emails(int(gid)):
-                    k = (e or "").strip().lower()
-                    if k and "@" in k and k not in seen and k not in blocked:
-                        seen.add(k)
-                        recipients.append(k)
-        already = int(results.get("sent_total") or 0)  # при повторі — не шлемо тим, кому вже пішло
-        recipients = recipients[already:] if already else recipients
-        if not recipients and not already:
-            raise RuntimeError("У вибраних групах немає email-адрес")
-        total = already + len(recipients)
-        sent = already
-        upsert_index(cid, {"total_recipients": total})
+        if (index_entry(cid) or {}).get("status") == "cancelled":
+            log.info("campaign %s cancelled before send", cid)
+            return
 
-        for i in range(0, len(recipients), BATCH_SIZE):
-            chunk = recipients[i:i + BATCH_SIZE]
-            if (index_entry(cid) or {}).get("status") == "cancelled":
-                log.info("campaign %s cancelled mid-way", cid)
-                results["sent_total"] = sent
-                repo.update(f"data/results/{cid}.json", lambda _: results, f"mailer: {cid} results", default={})
-                return
-            try:
-                resp = await esp.smartsend(mid, chunk)
-                ids = esp.extract_request_ids(resp)
-                results["request_ids"].extend(ids)
-                results["batches"].append({"size": len(chunk), "status": "sent", "at": iso(utcnow())})
-                sent += len(chunk)
-            except Exception as e:  # noqa: BLE001
-                results["batches"].append({"size": len(chunk), "status": "failed", "error": str(e)[:300], "at": iso(utcnow())})
-                failed += len(chunk)
-                upsert_index(cid, {"last_error": str(e)[:500]})
-                log.warning("campaign %s batch failed: %s", cid, str(e)[:200])
-            results["sent_total"] = sent
-            upsert_index(cid, {"sent_count": sent, "failed_count": failed})
-            await asyncio.sleep(BATCH_PAUSE)
+        test_emails = [e.strip().lower() for e in (full.get("test_emails") or []) if e.strip()]
+        if test_emails:
+            resp = await esp.smartsend(mid, test_emails)
+            ids = esp.extract_request_ids(resp)
+            errors = [x for x in (resp.get("results") if isinstance(resp, dict) else resp) or [] if isinstance(x, dict) and x.get("status") == "ERROR"]
+            if isinstance(errors, dict):
+                errors = [errors]
+            results["request_ids"].extend(ids)
+            results["batches"].append({"size": len(test_emails), "status": "sent" if ids else "failed", "at": iso(utcnow())})
+            repo.update(f"data/results/{cid}.json", lambda _: results, f"mailer: {cid} results", default={})
+            if not ids:
+                raise RuntimeError("eSputnik не прийняв тестовий лист: " + "; ".join(str(e.get("message")) for e in errors)[:300])
+            upsert_index(cid, {"status": "sent", "finished_at": iso(utcnow()), "total_recipients": len(test_emails), "sent_count": len(ids),
+                               "failed_count": len(test_emails) - len(ids), "last_error": ("; ".join(str(e.get("message")) for e in errors)[:300] or None)})
+            log.info("campaign %s test sent to %s address(es)", cid, len(ids))
+            return
 
+        group_ids = [int(g) for g in (full.get("group_ids") or [])]
+        if not group_ids:
+            raise RuntimeError("Не вибрано жодної групи отримувачів")
+        bid = await esp.create_broadcast(title=f"[MailingUA {cid}] {full['name']}", message_id=mid, group_ids=group_ids)
+        total = int(entry.get("total_recipients") or 0)
+        results["broadcast_id"] = bid
         repo.update(f"data/results/{cid}.json", lambda _: results, f"mailer: {cid} results", default={})
-        upsert_index(cid, {"status": "sent" if sent else "failed", "finished_at": iso(utcnow()), "sent_count": sent, "failed_count": failed})
-        log.info("campaign %s done: sent=%s failed=%s", cid, sent, failed)
+        upsert_index(cid, {"status": "sent", "finished_at": iso(utcnow()), "esputnik_broadcast_id": bid,
+                           "sent_count": total, "failed_count": 0})
+        log.info("campaign %s → eSputnik broadcast %s for %s group(s)", cid, bid, len(group_ids))
     except Exception as e:  # noqa: BLE001
         log.exception("campaign %s failed", cid)
-        upsert_index(cid, {"status": "failed", "finished_at": iso(utcnow()), "last_error": str(e)[:500], "sent_count": sent, "failed_count": failed})
+        upsert_index(cid, {"status": "failed", "finished_at": iso(utcnow()), "last_error": str(e)[:500]})
     await notify(cid)
 
 
@@ -257,9 +244,11 @@ async def refresh_stats(campaign_id: str | None) -> int:
                (c.get("status") == "sent" and parse(c.get("finished_at")) and parse(c["finished_at"]) >= cutoff))]
     for c in targets:
         results, _ = repo.read(f"data/results/{c['id']}.json")
-        ids = (results or {}).get("request_ids") or []
-        stats = {"delivered": 0, "opened": 0, "clicked": 0, "failed": 0, "tracked": len(ids)}
-        if ids:
+        results = results or {}
+        ids = results.get("request_ids") or []
+        stats = None
+        if ids:  # тестові листи — статус кожного requestId
+            stats = {"delivered": 0, "opened": 0, "clicked": 0, "failed": 0, "tracked": len(ids)}
             for st in await esp.fetch_status(ids):
                 s = str(st.get("status") or "").upper()
                 if str(st.get("delivered")).lower() == "true" or s in ("DELIVERED", "OPENED", "CLICKED", "READ"):
@@ -270,6 +259,12 @@ async def refresh_stats(campaign_id: str | None) -> int:
                     stats["clicked"] += 1
                 if str(st.get("failed")).lower() == "true" or s in ("FAILED", "ERROR", "BOUNCED"):
                     stats["failed"] += 1
+        elif results.get("broadcast_id") or c.get("esputnik_message_id"):
+            started = parse(c.get("started_at") or c.get("created_at")) or (utcnow() - timedelta(days=1))
+            stats = await esp.activity_stats(message_id=c.get("esputnik_message_id"), broadcast_id=results.get("broadcast_id"),
+                                             date_from=started.strftime("%Y-%m-%dT%H:%M:%S"), date_to=utcnow().strftime("%Y-%m-%dT%H:%M:%S"))
+            if stats is None:
+                stats = {"unavailable": True, "note": "Статистика броадкастів через API вмикається підтримкою eSputnik (ContactActivity). Поки що дивіться звіт у самому eSputnik."}
         upsert_index(c["id"], {"stats": stats, "stats_updated_at": iso(utcnow())})
     return len(targets)
 
