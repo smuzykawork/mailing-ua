@@ -1,5 +1,59 @@
 [
  {
+  "id": "c_mtisw2zooz9w",
+  "name": "Новини Haier MRV",
+  "subject": "Новини Haier MRV",
+  "content": {
+   "name": "",
+   "subject": "Новини Haier MRV",
+   "preheader": "Новини Haier MRV",
+   "headline": "Haier MRV - новий протокол зв’язку «Space-link»",
+   "bodyHtml": "<p><strong>З 2026р. в новому модельному ряді Haier MRV впроваджується новий протокол зв’язку «Space-link (1192)». Що він дає?</strong></p><p>1) Живлення плат внутрішніх блоків відбувається по лінії зв’язку постійною складовою 24В. Таким чином, якщо на якомусь внутрішньому блоці зникає живлення, система не встає в помилку і, більш того, цей внутрішній блок бере учать в процедурі повернення мастила і не створює тупиків для мастила в режимі опалення, тому що залишається можливість керувати ЕРВ.</p><p>2) Підвищена завадостійкість тепер дозволяє вільно конфігурувати топологію міжблочного зв’язку: не тільки класична «гірлянда», а й різні деревовидні структури і навіть «кільце». Це надає більшої гнучкості в конфігуруванні мережі і економію матеріалів.</p>",
+   "image": {
+    "url": "https://smuzykawork.github.io/mailing-ua/media/20260901_en9kwsma.jpg",
+    "alt": "CQDPF9V",
+    "placement": "before_buttons",
+    "previewUrl": ""
+   },
+   "buttons": [
+    {
+     "text": "Дізнатися більше",
+     "url": "https://haier-aircon.com.ua/"
+    },
+    {
+     "text": "Перейти в магазин",
+     "url": "https://haier-aircon.com.ua/"
+    }
+   ],
+   "contact": {
+    "text": "Звʼязатися з нами",
+    "url": "https://aclima.ua/contacts"
+   },
+   "contactLead": "Маєте питання? Напишіть нам — відповімо та допоможемо підібрати рішення.",
+   "audienceIds": [
+    202718210
+   ],
+   "accentColor": "",
+   "brand": "haier"
+  },
+  "group_ids": [
+   202718210
+  ],
+  "groups": [
+   "ПОШТА МОЯ ТЕСТ"
+  ],
+  "mode": "now",
+  "is_test": false,
+  "status": "queued",
+  "scheduled_at": null,
+  "created_at": "2026-09-01T15:06:55.140Z",
+  "total_recipients": 1,
+  "sent_count": 0,
+  "failed_count": 0,
+  "stats": null,
+  "last_error": null
+ },
+ {
   "id": "c_mtisvcgwb7re",
   "name": "[TEST] Новини Haier MRV",
   "subject": "Новини Haier MRV",
