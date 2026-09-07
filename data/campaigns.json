@@ -1,5 +1,55 @@
 [
  {
+  "id": "c_mtraqohgzar7",
+  "name": "[TEST] Новини Haier MRV",
+  "subject": "Новини Haier MRV",
+  "content": {
+   "name": "",
+   "subject": "Новини Haier MRV",
+   "preheader": "Новини Haier MRV",
+   "headline": "Haier MRV - новий протокол зв’язку «Space-link»",
+   "bodyHtml": "<p>Вітаємо! 👋<br>З 2026 року в системах Haier MRV впроваджується новий протокол Space-link (1192).⚙️</p><p><strong>- Плати внутрішніх блоків отримують живлення 24 В через лінію зв’язку.</strong><br>Таким чином, якщо на якомусь внутрішньому блоці зникає живлення, система не встає в помилку і, більш того, цей внутрішній блок бере учать в процедурі повернення мастила і не створює тупиків для мастила в режимі опалення, тому що залишається можливість керувати ЕРВ.</p><p><strong>-Підвищена завадостійкість дозволяє використовувати класичне послідовне підключення, деревоподібні структури та топологію кільце.</strong><br>Для клієнта це означає більшу надійність системи, гнучкіше проєктування та економію монтажних матеріалів.</p><p>Рішення оптимально підходить для великих комерційних об’єктів і систем зі складною конфігурацією мережі.</p><p><strong>Звертайтеся до нас, щоб отримати професійну консультацію та підібрати оптимальну систему Haier MRV. 📩</strong></p>",
+   "image": {
+    "url": "https://smuzykawork.github.io/mailing-ua/media/20260907_t8976lf7.jpg",
+    "alt": "CQDPF9V",
+    "placement": "top",
+    "previewUrl": ""
+   },
+   "buttons": [
+    {
+     "text": "СТАТИ ДИЛЕРОМ",
+     "url": "https://haiercac.eu/uk/staty-dylerom-haier"
+    },
+    {
+     "text": "НАШ САЙТ",
+     "url": "https://haiercac.eu/uk"
+    }
+   ],
+   "contact": {
+    "text": "Звʼязатися з нами",
+    "url": "https://haiercac.eu/uk/contacts"
+   },
+   "contactLead": "Маєте питання? Напишіть нам — відповімо та допоможемо підібрати рішення.",
+   "audienceIds": [],
+   "accentColor": "",
+   "brand": "haier"
+  },
+  "group_ids": [],
+  "groups": [
+   "тест → smuzykawork@gmail.com"
+  ],
+  "mode": "now",
+  "is_test": true,
+  "status": "queued",
+  "scheduled_at": null,
+  "created_at": "2026-09-07T13:48:45.556Z",
+  "total_recipients": 1,
+  "sent_count": 0,
+  "failed_count": 0,
+  "stats": null,
+  "last_error": null
+ },
+ {
   "id": "c_mtisw2zooz9w",
   "name": "Новини Haier MRV",
   "subject": "Новини Haier MRV",
