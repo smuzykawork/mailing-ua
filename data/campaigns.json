@@ -170,11 +170,18 @@
   "total_recipients": 1,
   "sent_count": 1,
   "failed_count": 0,
-  "stats": null,
+  "stats": {
+   "delivered": 1,
+   "opened": 1,
+   "clicked": 0,
+   "failed": 0,
+   "tracked": 1
+  },
   "last_error": null,
   "started_at": "2026-09-07T13:49:07Z",
   "esputnik_message_id": 4673297,
-  "finished_at": "2026-09-07T13:49:13Z"
+  "finished_at": "2026-09-07T13:49:13Z",
+  "stats_updated_at": "2026-09-07T15:53:18Z"
  },
  {
   "id": "c_mtisw2zooz9w",
