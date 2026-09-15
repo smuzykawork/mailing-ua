@@ -112,11 +112,18 @@
   "total_recipients": 1,
   "sent_count": 1,
   "failed_count": 0,
-  "stats": null,
+  "stats": {
+   "delivered": 1,
+   "opened": 1,
+   "clicked": 0,
+   "failed": 0,
+   "tracked": 1
+  },
   "last_error": null,
   "started_at": "2026-09-15T11:09:59Z",
   "esputnik_message_id": 4685007,
-  "finished_at": "2026-09-15T11:10:11Z"
+  "finished_at": "2026-09-15T11:10:11Z",
+  "stats_updated_at": "2026-09-15T15:08:51Z"
  },
  {
   "id": "c_mtratlicex78",
