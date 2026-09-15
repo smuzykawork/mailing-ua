@@ -40,14 +40,15 @@
   ],
   "mode": "now",
   "is_test": true,
-  "status": "queued",
+  "status": "sending",
   "scheduled_at": null,
   "created_at": "2026-09-15T11:09:45.925Z",
   "total_recipients": 1,
   "sent_count": 0,
   "failed_count": 0,
   "stats": null,
-  "last_error": null
+  "last_error": null,
+  "started_at": "2026-09-15T11:09:59Z"
  },
  {
   "id": "c_mtratlicex78",
