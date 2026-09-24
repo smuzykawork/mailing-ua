@@ -44,14 +44,15 @@
   ],
   "mode": "now",
   "is_test": false,
-  "status": "queued",
+  "status": "sending",
   "scheduled_at": null,
   "created_at": "2026-09-24T15:09:13.494Z",
   "total_recipients": 2511,
   "sent_count": 0,
   "failed_count": 0,
   "stats": null,
-  "last_error": null
+  "last_error": null,
+  "started_at": "2026-09-24T15:09:31Z"
  },
  {
   "id": "c_mu2kzbhsv61a",
