@@ -38,14 +38,15 @@
   ],
   "mode": "now",
   "is_test": false,
-  "status": "queued",
+  "status": "sending",
   "scheduled_at": null,
   "created_at": "2026-10-02T09:52:19.592Z",
   "total_recipients": 49,
   "sent_count": 0,
   "failed_count": 0,
   "stats": null,
-  "last_error": null
+  "last_error": null,
+  "started_at": "2026-10-02T09:52:34Z"
  },
  {
   "id": "c_mufo3n2uzl8d",
