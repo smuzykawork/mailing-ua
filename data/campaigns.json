@@ -1,5 +1,53 @@
 [
  {
+  "id": "c_muqsax6w7a93",
+  "name": "🔔 Нагадування: сьогодні о 13:00 — авторизаційний курс MYCOND",
+  "subject": "🔔 Нагадування: сьогодні о 13:00 — авторизаційний курс MYCOND",
+  "content": {
+   "name": "🔔 Нагадування: сьогодні о 13:00 — авторизаційний курс MYCOND",
+   "subject": "🔔 Нагадування: сьогодні о 13:00 — авторизаційний курс MYCOND",
+   "preheader": "🔔 Нагадування: сьогодні о 13:00 — авторизаційний курс MYCOND",
+   "headline": "🕐 Початок о 13:00",
+   "bodyHtml": "<p>Доброго дня!<br>Нагадуємо, що вже сьогодні о 13:00 відбудеться онлайн-вебінар:</p><p><strong>Авторизаційний курс по тепловим насосам MYCOND</strong><br>На вас чекає практична інформація про:<br>- офіційну авторизацію MYCOND;<br>- технічні особливості теплових насосів;<br>- практичні рішення та рекомендації;<br>- опалення, охолодження та ГВП.<br>🗓 Сьогодні, 30 вересня<br>🕐 Початок о 13:00<br>💻 Формат: онлайн<br>Якщо ви ще не зареєструвалися — саме час це зробити!<br>До зустрічі о 13:00 💚</p>",
+   "image": {
+    "url": "https://smuzykawork.github.io/mailing-ua/media/20261002_qy4vpq08.jpg",
+    "alt": "photo_2026-10-02_12-46-31",
+    "placement": "top",
+    "previewUrl": ""
+   },
+   "buttons": [
+    {
+     "text": "ВХІД",
+     "url": "https://efir.webinar-stars.com/webinar/bb42f4c643/"
+    }
+   ],
+   "contact": {
+    "text": "Звʼязатися з нами",
+    "url": "https://mycond.ua/"
+   },
+   "contactLead": "Маєте питання? Напишіть нам — відповімо та допоможемо підібрати рішення.",
+   "audienceIds": [],
+   "accentColor": "",
+   "brand": "mycond"
+  },
+  "group_ids": [
+   202760091
+  ],
+  "groups": [
+   "Новая таблица 02.10.2026"
+  ],
+  "mode": "now",
+  "is_test": false,
+  "status": "queued",
+  "scheduled_at": null,
+  "created_at": "2026-10-02T09:52:19.592Z",
+  "total_recipients": 49,
+  "sent_count": 0,
+  "failed_count": 0,
+  "stats": null,
+  "last_error": null
+ },
+ {
   "id": "c_mufo3n2uzl8d",
   "name": "Новини Haier MRV",
   "subject": "Новини Haier MRV",
