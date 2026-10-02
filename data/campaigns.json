@@ -44,12 +44,16 @@
   "total_recipients": 49,
   "sent_count": 49,
   "failed_count": 0,
-  "stats": null,
+  "stats": {
+   "unavailable": true,
+   "note": "Статистика броадкастів через API вмикається підтримкою eSputnik (ContactActivity). Поки що дивіться звіт у самому eSputnik."
+  },
   "last_error": null,
   "started_at": "2026-10-02T09:52:34Z",
   "esputnik_message_id": 4711620,
   "finished_at": "2026-10-02T09:52:41Z",
-  "esputnik_broadcast_id": "4550693"
+  "esputnik_broadcast_id": "4550693",
+  "stats_updated_at": "2026-10-02T12:53:47Z"
  },
  {
   "id": "c_mufo3n2uzl8d",
