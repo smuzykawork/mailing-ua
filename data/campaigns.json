@@ -1,5 +1,63 @@
 [
  {
+  "id": "c_muy7ixvjp2ma",
+  "name": "Авторизаційний курс з теплових насосів MYCOND",
+  "subject": "Авторизаційний курс з теплових насосів MYCOND",
+  "content": {
+   "name": "",
+   "subject": "Авторизаційний курс з теплових насосів MYCOND",
+   "preheader": "Авторизаційний курс з теплових насосів MYCOND",
+   "headline": "Запрошуємо Вас на авторизаційний курс з теплових насосів MYCOND",
+   "bodyHtml": "<p>Добрий день!</p><p>Запрошуємо Вас на авторизаційний курс з теплових насосів MYCOND&nbsp;</p><p>На курсі розглянемо ключові особливості обладнання, принципи роботи та важливі аспекти, необхідні для професійного підбору й роботи з тепловими насосами MYCOND.</p><p>📅 Дата та час:<br>• Четвер о 17:00<br>• Субота о 17:00</p><p>⏱ Тривалість: 3 години</p><p>💻 Формат: онлайн</p>",
+   "image": {
+    "url": "https://smuzykawork.github.io/mailing-ua/media/20261007_4wbwcjho.png",
+    "alt": "CQmBrga",
+    "placement": "top",
+    "previewUrl": ""
+   },
+   "buttons": [
+    {
+     "text": "Вхід на вебінар",
+     "url": "https://efir.webinar-stars.com/webinar/95636e3c0f080d7/"
+    },
+    {
+     "text": "Стати дилером",
+     "url": "https://mycond.ua/contacts#callback"
+    }
+   ],
+   "contact": {
+    "text": "Звʼязатися з нами",
+    "url": "https://mycond.ua/contacts"
+   },
+   "contactLead": "Маєте питання? Напишіть нам — відповімо та допоможемо підібрати рішення.",
+   "audienceIds": [],
+   "accentColor": "",
+   "brand": "mycond"
+  },
+  "group_ids": [
+   202743886,
+   202684207,
+   202546128,
+   202422086
+  ],
+  "groups": [
+   "ПОВІТРЯ ВОДА ЛІДИ 21.09.2026",
+   "дилери всі до 05.08",
+   "Вебінар «Встановлення та кріплення теплових насосів: як зробити монтаж правильно з першого разу»",
+   "контакти Перевірено усі"
+  ],
+  "mode": "now",
+  "is_test": false,
+  "status": "queued",
+  "scheduled_at": null,
+  "created_at": "2026-10-07T14:32:51.199Z",
+  "total_recipients": 4305,
+  "sent_count": 0,
+  "failed_count": 0,
+  "stats": null,
+  "last_error": null
+ },
+ {
   "id": "c_muy0ffi1yfcp",
   "name": "Новини Haier LCAC",
   "subject": "Новини Haier LCAC",
