@@ -52,7 +52,8 @@
   "failed_count": 0,
   "stats": null,
   "last_error": null,
-  "started_at": "2026-10-15T12:31:45Z"
+  "started_at": "2026-10-15T12:31:45Z",
+  "esputnik_message_id": 4732084
  },
  {
   "id": "c_mv15vo8ubsob",
