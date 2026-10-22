@@ -46,14 +46,15 @@
   ],
   "mode": "now",
   "is_test": false,
-  "status": "queued",
+  "status": "sending",
   "scheduled_at": null,
   "created_at": "2026-10-22T15:35:09.986Z",
   "total_recipients": 2558,
   "sent_count": 0,
   "failed_count": 0,
   "stats": null,
-  "last_error": null
+  "last_error": null,
+  "started_at": "2026-10-22T15:35:24Z"
  },
  {
   "id": "c_mv9odse6e6nh",
