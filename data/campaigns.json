@@ -48,14 +48,15 @@
   ],
   "mode": "now",
   "is_test": false,
-  "status": "queued",
+  "status": "sending",
   "scheduled_at": null,
   "created_at": "2026-10-22T15:46:07.858Z",
   "total_recipients": 2667,
   "sent_count": 0,
   "failed_count": 0,
   "stats": null,
-  "last_error": null
+  "last_error": null,
+  "started_at": "2026-10-22T15:46:22Z"
  },
  {
   "id": "c_mvjpcuqqnmp1",
