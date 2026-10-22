@@ -54,12 +54,19 @@
   "total_recipients": 2667,
   "sent_count": 2667,
   "failed_count": 0,
-  "stats": null,
+  "stats": {
+   "delivered": 0,
+   "opened": 0,
+   "clicked": 0,
+   "failed": 0,
+   "unsubscribed": 0
+  },
   "last_error": null,
   "started_at": "2026-10-22T15:46:22Z",
   "esputnik_message_id": 4745322,
   "finished_at": "2026-10-22T15:46:29Z",
-  "esputnik_broadcast_id": "4573515"
+  "esputnik_broadcast_id": "4573515",
+  "stats_updated_at": "2026-10-22T16:05:32Z"
  },
  {
   "id": "c_mvjpcuqqnmp1",
