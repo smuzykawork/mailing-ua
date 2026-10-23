@@ -191,8 +191,8 @@
   "sent_count": 4401,
   "failed_count": 0,
   "stats": {
-   "delivered": 5147,
-   "opened": 1071,
+   "delivered": 5151,
+   "opened": 1075,
    "clicked": 59,
    "failed": 131,
    "unsubscribed": 30
@@ -202,7 +202,7 @@
   "esputnik_message_id": 4732633,
   "finished_at": "2026-10-15T15:10:47Z",
   "esputnik_broadcast_id": "4565460",
-  "stats_updated_at": "2026-10-23T12:05:43Z"
+  "stats_updated_at": "2026-10-23T17:04:19Z"
  },
  {
   "id": "c_mv9ipp75deh6",
