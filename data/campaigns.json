@@ -121,12 +121,19 @@
   "total_recipients": 4558,
   "sent_count": 4558,
   "failed_count": 0,
-  "stats": null,
+  "stats": {
+   "delivered": 4631,
+   "opened": 442,
+   "clicked": 10,
+   "failed": 170,
+   "unsubscribed": 4
+  },
   "last_error": null,
   "started_at": "2026-11-05T15:33:29Z",
   "esputnik_message_id": 4768566,
   "finished_at": "2026-11-05T15:33:37Z",
-  "esputnik_broadcast_id": "4589129"
+  "esputnik_broadcast_id": "4589129",
+  "stats_updated_at": "2026-11-05T21:25:59Z"
  },
  {
   "id": "c_mvjpqycyb5b6",
