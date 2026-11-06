@@ -57,18 +57,18 @@
   "sent_count": 4780,
   "failed_count": 0,
   "stats": {
-   "delivered": 4745,
-   "opened": 509,
-   "clicked": 27,
+   "delivered": 4816,
+   "opened": 577,
+   "clicked": 30,
    "failed": 131,
-   "unsubscribed": 3
+   "unsubscribed": 5
   },
   "last_error": null,
   "started_at": "2026-11-05T15:35:38Z",
   "esputnik_message_id": 4768572,
   "finished_at": "2026-11-05T15:35:47Z",
   "esputnik_broadcast_id": "4589131",
-  "stats_updated_at": "2026-11-06T01:43:48Z"
+  "stats_updated_at": "2026-11-06T08:35:28Z"
  },
  {
   "id": "c_mw3pg3jgox60",
